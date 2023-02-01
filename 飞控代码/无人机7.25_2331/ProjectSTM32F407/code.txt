@@ -1,0 +1,616 @@
+void Task1( )
+{
+    static u8 circle_center_flag = 0;
+    // ##: 每次进入函数的时候都去记录一次此时系统时间
+    // 用于标定任务已经进行的时间
+    switch ( Task_State )
+    {
+        case 0:
+            FC_Unlock( );
+            NextStep;
+            break;
+        case 1:
+            // 完成延时的工作
+            if ( Step_time >= 2000 )
+                NextStep;
+            break;
+        case 2:
+            // #: 起飞同时进行定高
+            Set_Height( 90 );
+            Circle_on;
+            Height_PID_on;
+            Circle_Center_on;
+            if ( Step_time >= 8000 )
+                NextStep;
+            break;
+        case 3:
+            if ( Step_time >= 10500 )
+            {
+                Recording_on;
+                NextStep;
+            }
+            break;
+        case 4:
+            Set_Height( 70 );
+            if ( Step_time > 4000 )
+            {
+                NextStep;
+                Line_on;
+                Circle_off;
+                Circle_Center_off;
+                Line_Track_on;
+            }
+            break;
+        case 5:
+            Set_vel_X( 30 );
+            if ( Step_time > 13000 )
+            {
+                Circle_on;
+                NextStep;
+            }
+            break;
+        case 6:
+            if ( circle_feature.flag )
+            {
+                Set_vel_X( 0 );
+                Set_Dps_Yaw( 0 );
+                Line_off;
+                Line_Track_off;
+                Circle_Center_on;
+                NextStep;
+            }
+            break;
+        case 7:
+            if ( my_abs( circle_feature.X ) < 3 && my_abs( circle_feature.Y ) < 3 )
+            {
+                circle_center_flag++;
+                if ( circle_center_flag >= 5 )
+                {
+                    circle_center_flag = 0;
+                    Circle_Center_off;
+                    Height_PID_off;
+                    Stop_Motion( );
+                    NextStep;
+                }
+            }
+            else
+                circle_center_flag = 0;
+            break;
+        case 8:
+            if ( Step_time > 3000 )
+            {
+                Recording_off;
+                OneKey_Land( );
+                NextStep;
+            }
+            break;
+        case 9:
+            if ( Step_time > 5000 )
+            {
+                Working_Mode = 0;
+                Task_State   = 0;
+            }
+            break;
+        default:
+            Working_Mode = 0;
+            Task_State   = 0;
+            break;
+    }
+}
+
+void Task2( )
+{
+    switch ( Task_State )
+    {
+        case 0:
+            FC_Unlock( );
+            NextStep;
+            break;
+        case 1:
+            // 完成延时的工作
+            if ( Step_time >= 2000 )
+            {    // ##: 起飞同时进行定高
+                Set_Height( 90 );
+                Height_PID_on;
+                Circle_on;
+                Line_Track_on;
+                Circle_Center_on;
+                Line_Angle_Track_on;
+                NextStep;
+            }
+            break;
+        case 2:    // 响铃
+            if ( Step_time >= 5000 )
+            {
+                Beep_on;
+                NextStep;
+            }
+            break;
+        case 3:    // 巡线底边
+            if ( Step_time >= 4000 )
+            {
+                Beep_off;
+                Circle_Center_off;
+                Circle_off;
+                Line_Track_on;
+                Set_vel_X( 30 );
+                Recording_on;
+                NextStep;
+            }
+            break;
+        case 4:    // 转弯
+            if ( Step_time >= 4000 )
+            {
+                if ( dot_feature.flag )
+                {
+                    Line_Track_off;
+                    Stop_Horizontal_Move( );
+                    Dot_Center_on;
+                    NextStep;
+                }
+            }
+            break;
+        case 5:    // 找点
+            if ( my_abs( dot_feature.X ) < 2 && my_abs( dot_feature.Y ) < 2 )
+            {
+                Dot_Center_off;
+                Set_Dps_Yaw( 30 );
+                NextStep;
+            }
+            break;
+        case 6:    // 找点完成
+            if ( Step_time > 2800 )
+            {
+                Set_Dps_Yaw( 0 );
+                Line_Track_on;
+                Set_vel_X( 30 );
+                Set_Height( 70 );
+                NextStep;
+            }
+            break;
+        case 7:
+            if ( Step_time > 15000 )
+            {
+                if ( dot_feature.flag )
+                {
+                    Line_Track_off;
+                    Stop_Horizontal_Move( );
+                    Dot_Center_on;
+                    NextStep;
+                }
+            }
+            break;
+        case 8:
+            if ( my_abs( dot_feature.X ) < 2 && my_abs( dot_feature.Y ) < 2 )
+            {
+                Dot_Center_off;
+                Set_Dps_Yaw( 30 );
+                NextStep;
+            }
+            break;
+        case 9:
+            if ( Step_time > 2800 )
+            {
+                Set_Dps_Yaw( 0 );
+                Line_Track_on;
+                Set_vel_X( 30 );
+                Set_Height( 90 );
+                NextStep;
+            }
+            break;
+        case 10:
+            if ( Step_time > 6000 )
+            {
+                if ( dot_feature.flag )
+                {
+                    Line_Track_off;
+                    Dot_Center_on;
+                    NextStep;
+                }
+            }
+            break;
+        case 11:
+            if ( my_abs( dot_feature.X ) < 2 && my_abs( dot_feature.Y ) < 2 )
+            {
+                Dot_Center_off;
+                Set_Dps_Yaw( 30 );
+                NextStep;
+            }
+            break;
+        case 12:
+            if ( Step_time > 2800 )
+            {
+                Set_Dps_Yaw( 0 );
+                Line_Track_on;
+                Set_vel_X( 30 );
+                Set_Height( 70 );
+                NextStep;
+            }
+            break;
+        case 13:
+            if ( Step_time >= 15000 )
+            {
+                if ( dot_feature.flag )
+                {
+                    Line_Track_off;
+                    Stop_Horizontal_Move( );
+                    Dot_Center_on;
+                    NextStep;
+                }
+            }
+            break;
+        case 14:
+            if ( my_abs( dot_feature.X ) < 2 && my_abs( dot_feature.Y ) < 2 )
+            {
+                Dot_Center_off;
+                Set_Dps_Yaw( 30 );
+                NextStep;
+            }
+            break;
+        case 15:
+            if ( Step_time > 2800 )
+            {
+                Set_Dps_Yaw( 0 );
+                Line_Track_on;
+                Set_vel_X( 30 );
+                Set_Height( 90 );
+                Circle_on;
+                NextStep;
+            }
+            break;
+        case 16:
+            if ( circle_feature.flag )
+            {
+                Line_Track_off;
+                Line_Angle_Track_on;
+                Stop_Horizontal_Move( );
+                Circle_Center_on;
+                NextStep;
+            }
+            break;
+        case 17:
+            if ( circle_feature.X < 3 && circle_feature.Y < 3 )
+            {
+                Circle_off;
+                Circle_Center_off;
+                Height_PID_off;
+                Stop_Motion( );
+                NextStep;
+            }
+            break;
+        case 18:
+            if ( Step_time > 3000 )
+            {
+                Recording_off;
+                OneKey_Land( );
+                NextStep;
+            }
+            break;
+        case 19:
+            if ( Step_time > 5000 )
+            {
+                Working_Mode = 0;
+                Task_State   = 0;
+            }
+            break;
+        default: break;
+    }
+}
+
+void Task3( )
+{
+    switch ( Task_State )
+    {
+        case 0:
+            FC_Unlock( );
+            NextStep;
+            break;
+        case 1:
+            // 完成延时的工作
+            if ( Step_time >= 2000 )
+            {    // #: 起飞同时进行定高
+                Set_Height( 110 );
+                Height_PID_on;
+                Circle_on;
+                Circle_Center_on;    // Red_block_center_on
+                NextStep;
+            }
+            break;
+        case 2:
+            if ( Step_time >= 5000 )
+            {
+                Recording_on;
+                Beep_on;
+                NextStep;
+            }
+            break;
+        case 3:
+            if ( Step_time >= 18000 )
+            {
+                Beep_off;
+                Circle_Center_off;
+                Height_PID_off;
+                Stop_Motion( );
+                NextStep;
+            }
+            break;
+        case 4:
+            if ( Step_time > 3000 )
+            {
+                Recording_off;
+                OneKey_Land( );
+                NextStep;
+            }
+            break;
+        case 5:
+            if ( Step_time > 4000 )
+            {
+                Working_Mode = 0;
+                Task_State   = 0;
+            }
+            break;
+        default:
+            Working_Mode = 0;
+            Task_State   = 0;
+            break;
+    }
+}
+
+void Test_Task( )
+{
+    if ( Task_State == 0 )
+    {
+        // #: 解锁飞控并设置标志.
+        FC_Unlock( );
+        NextStep;
+    }
+    else if ( Task_State == 1 )
+    {
+        // #: 进行延时
+        if ( Step_time >= 2000 )
+            NextStep;
+    }
+    else if ( Task_State == 2 )
+    {
+        // #: 起飞同时进行定高
+        Height            = 70;
+        _Height_PID_Flag_ = 1;
+        if ( Step_time >= 8000 )
+            NextStep;
+    }
+    else if ( Task_State == 3 )
+    {
+        // #: 旋转对红色杆子进行寻找
+        Set_Dps_Yaw( 10 );
+        if ( Step_time >= 8800 || redline_feature.flag )
+        {
+            Set_Dps_Yaw( 0 );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 4 )
+    {
+        // #: 进行绕杆的运动
+        CounterClockwise_Rotate_Flag = 1;
+        if ( Step_time >= 40000 )
+        {
+            CounterClockwise_Rotate_Flag = 0;
+            _Height_PID_Flag_            = 0;
+            Stop_Motion( );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 5 )
+    {
+        if ( Step_time > 5000 )
+        {
+            OneKey_Land( );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 6 )
+    {
+        if ( Step_time > 3000 )
+        {
+            Task_State   = 0;
+            Working_Mode = 0;
+        }
+    }
+}
+
+void Task( )
+{
+    if ( Task_State == 0 )
+    {
+        // #: 解锁飞控并设置标志.
+        FC_Unlock( );
+        NextStep;
+    }
+    else if ( Task_State == 1 )
+    {
+        // ##: 进行延时
+        if ( Step_time >= 2000 )
+            NextStep;
+    }
+    else if ( Task_State == 2 )
+    {
+        // ##: 起飞同时进行定高
+        _Height_PID_Flag_ = 1;
+        Height            = 60;
+        if ( Step_time >= 8000 )
+            NextStep;
+    }
+    else if ( Task_State == 3 )
+    {
+        // ##: 旋转对红色杆子进行寻找
+        Set_Dps_Yaw( 8 );
+
+        if ( Step_time >= 10000 || redline_feature.flag )
+        {
+            Set_Dps_Yaw( 0 );
+            NextStep;
+        }
+        // // !: 没有找到
+        // else if ( Step_time >= 15000 )
+        // {
+        //     _Height_PID_Flag_ = 0;
+
+        //     Stop_Motion( );
+        //     Flag_Time  = GetSysRunTimeMs( );
+        //     Task_State = 13;
+        // }
+    }
+    else if ( Task_State == 4 )
+    {
+        // 开始追踪红色杆子(角度)
+        _RedLine_Yaw_PID_Flag_ = 1;
+        if ( Step_time >= 2000 && my_abs( redline_feature.offset ) < 4 )
+        {
+            _RedLine_Yaw_PID_Flag_ = 0;
+            NextStep;
+        }
+    }
+    else if ( Task_State == 5 )
+    {
+        Set_vel_X( 8 );
+        if ( Ctrl_Dst.distance < 70 )
+        {
+            Set_vel_X( 0 );
+            Try_To_Find_GreenPillar_Flag = 1;
+            NextStep;
+        }
+    }
+    // else if ( Task_State == 6 )
+    // {
+    //     // 开始抵近红色杆子
+    //     _Pillar_Distance_PID_Flag_ = 1;
+    //     if ( Ctrl_Dst.distance < 70 )
+    //     {
+    //         _Pillar_Distance_PID_Flag_   = 0;
+    //         Try_To_Find_GreenPillar_Flag = 1;
+    //         NextStep;
+    //     }
+    // }
+    else if ( Task_State == 6 )
+    {
+        // ##: 进行绕杆的运动
+        CounterClockwise_Rotate_Flag = 1;
+        // ##: 此判断用于判定是否完成一圈的旋转
+        if ( Find_GreenPillar_Times >= 2 &&
+             ( greenline_feature.offset > ( GreenPillar_FirstAppear_Pos + 5 ) &&
+               greenline_feature.offset < ( GreenPillar_FirstAppear_Pos + 12 ) ) &&
+             greenline_feature.flag )
+            NextStep;
+    }
+    else if ( Task_State == 7 )
+    {
+        // ##: 进一步旋转到合适的角度
+        if ( greenline_feature.offset < -40 )
+        {
+            // 对积分结果进行一次清除
+            _Angle_PID_InteClear_Flag_   = 1;
+            CounterClockwise_Rotate_Flag = 0;
+            Stop_Horizontal_Move( );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 8 )
+    {
+        // ##: 向右侧移动一定的距离防止撞击
+        Set_vel_Y( -8 );
+        if ( Step_time >= 10000 )
+        {
+            Set_vel_Y( 0 );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 9 )
+    {
+        // 先进行角度调整
+        _GreenLine_Yaw_PID_Flag_ = 1;
+        if ( my_abs( greenline_feature.offset ) < 5 )
+        {
+            NextStep;
+            _GreenLine_Yaw_PID_Flag_ = 0;
+        }
+    }
+    else if ( Task_State == 10 )
+    {
+        // 向前前进一定的距离, 便于超声波模块的判断
+        Set_vel_X( 8 );
+        if ( Ctrl_Dst.distance < 100 )
+        {
+            NextStep;
+            Set_vel_X( 0 );
+        }
+    }
+    else if ( Task_State == 11 )
+    {
+        // 开始抵近绿色的杆子
+        _Pillar_Distance_PID_Flag_ = 1;
+        // 抵近成功, 准备进行绕杆的运动
+        if ( Ctrl_Dst.distance < 60 )
+        {
+            _Pillar_Distance_PID_Flag_ = 0;
+            _GreenLine_Yaw_PID_Flag_   = 0;
+            NextStep;
+        }
+    }
+    else if ( Task_State == 12 )
+    {
+        // 进行顺时针绕杆运动
+        Clockwise_Rotate_Flag = 1;
+        if ( Step_time >= 40000 )
+        {
+            Clockwise_Rotate_Flag = 0;
+            _Height_PID_Flag_     = 0;
+            Stop_Motion( );
+            // Stop_Horizontal_Move( );
+            NextStep;
+        }
+    }
+    // else if ( Task_State == 14 )
+    // {
+    //     _Circle_PID_Flag_ = 1;
+    //     if ( my_abs( circle_feature.X ) < 3 && my_abs( circle_feature.Y ) < 3 )
+    //     {
+    //         _Circle_PID_Flag_ = 0;
+    //         _Height_PID_Flag_ = 0;
+
+    //         Stop_Motion( );
+    //         NextStep;
+    //     }
+    // }
+    else if ( Task_State == 13 )
+    {
+        if ( Step_time > 3000 )
+        {
+            OneKey_Land( );
+            NextStep;
+        }
+    }
+    else if ( Task_State == 14 )
+    {
+        if ( Step_time > 4000 )
+        {
+            Task_State   = 0;
+            Working_Mode = 0;
+        }
+    }
+    // else if ( Task_State == 12 )
+    // {
+    //     if ( Step_time > 5000 )
+    //     {
+    //         OneKey_Land( );
+    //         NextStep;
+    //     }
+    // }
+    // else if ( Task_State == 13 )
+    // {
+    //     if ( Step_time > 3000 )
+    //     {
+    //         Task_State    = 0;
+    //         Working_Mode = 0;
+    //     }
+    // }
+}
